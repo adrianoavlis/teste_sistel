@@ -1,12 +1,26 @@
 package br.com.sistelteste;
 
-import br.com.sistelteste.extensions.ScreenshotOnFailureExtension;
-import br.com.sistelteste.extensions.WebDriverProvider;
-import io.github.bonigarcia.wdm.WebDriverManager;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.openqa.selenium.*;
+import org.openqa.selenium.Alert;
+import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
+import org.openqa.selenium.NoAlertPresentException;
+import org.openqa.selenium.TimeoutException;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.interactions.Actions;
@@ -14,9 +28,9 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
+import br.com.sistelteste.extensions.ScreenshotOnFailureExtension;
+import br.com.sistelteste.extensions.WebDriverProvider;
+import io.github.bonigarcia.wdm.WebDriverManager;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -32,30 +46,31 @@ public class RelacaoBeneficosReajustadosTest implements WebDriverProvider {
         WebDriverManager.chromedriver().setup();
     }
 
-@BeforeEach
-void setup() {
-    ChromeOptions options = new ChromeOptions();
+    @BeforeEach
+    void setup() {
+        ChromeOptions options = new ChromeOptions();
 
-    // Desabilita o gerenciamento de senhas e alertas
-    options.addArguments("--disable-notifications");
-    options.addArguments("--disable-popup-blocking");
-    options.addArguments("--disable-save-password-bubble");
-    options.addArguments("--disable-features=PasswordManagerEnabled,PasswordCheck");
+        // ⚠️ NÃO incluir "--incognito" nem "--guest"
+        // Configurações opcionais
+        options.addArguments("--start-maximized"); // ou use driver.manage().window().maximize()
+        options.addArguments("--disable-notifications");
+        options.addArguments("--disable-popup-blocking");
 
-    // Define preferências diretamente
-    Map<String, Object> prefs = new HashMap<>();
-    prefs.put("credentials_enable_service", false); // Desativa serviço de credenciais
-    prefs.put("profile.password_manager_enabled", false); // Desativa o gerenciador de senhas
+        // Desativa o gerenciador de senhas do Chrome
+        Map<String, Object> prefs = new HashMap<>();
+        prefs.put("credentials_enable_service", false);
+        prefs.put("profile.password_manager_enabled", false);
+        options.setExperimentalOption("prefs", prefs);
 
-    options.setExperimentalOption("prefs", prefs);
+        driver = new ChromeDriver(options);
+        //driver.manage().window().maximize();
+        wait = new WebDriverWait(driver, Duration.ofSeconds(1));
+        driver.get(BASE_URL);
+    }
 
-    driver = new ChromeDriver(options);
-    driver.manage().window().maximize();
-    wait = new WebDriverWait(driver, Duration.ofSeconds(3));
-    driver.get(BASE_URL);
-}
 
-    /*
+
+/*
      * @BeforeEach
      * void setup() {
      * ChromeOptions options = new ChromeOptions();
@@ -68,10 +83,9 @@ void setup() {
      * 
      * driver.get(BASE_URL);
      * }
-     */
-
-    @Test
-    @Order(1)
+ */
+@Test
+@Order(1)
     @DisplayName("Deve acessar a funcionalidade Relação de Benefícios Reajustados após o login")
     void deveAcessarRelacaoDeBeneficiosReajustados() {
         driver.findElement(By.id("j_username")).sendKeys("administrador");
@@ -117,7 +131,7 @@ void setup() {
         // Após o submenu aparecer e clica
         WebElement submenu1 = wait.until(ExpectedConditions.elementToBeClickable(
                 By.cssSelector("#M00040Menu > li:nth-child(4) > a")));
-        submenu1.click(); 
+        submenu1.click();
 
         // Seleciona Fundo
         WebElement combo = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("#identificadorFundo")));
@@ -139,25 +153,23 @@ void setup() {
         Select selectbnf = new Select(bnf);
         selectbnf.selectByVisibleText("APOSENTADORIA POR INVALIDEZ");
 
-
-         // Preenche o input  Mês/Ano de Competência do Reajuste
+        // Preenche o input  Mês/Ano de Competência do Reajuste
         WebElement mesAnoIni = wait
                 .until(ExpectedConditions.elementToBeClickable(By.cssSelector("#layout_col_principal > table > tbody > tr > td > form > table:nth-child(23) > tbody > tr:nth-child(1) > td > fieldset > table > tbody > tr > td:nth-child(2) > input")));
         mesAnoIni.clear();
         mesAnoIni.sendKeys("01/2010");
         mesAnoIni.sendKeys(Keys.TAB);
 
-           WebElement mesAnoFin = wait
+        WebElement mesAnoFin = wait
                 .until(ExpectedConditions.elementToBeClickable(By.cssSelector("#layout_col_principal > table > tbody > tr > td > form > table:nth-child(23) > tbody > tr:nth-child(1) > td > fieldset > table > tbody > tr > td:nth-child(5) > input")));
         mesAnoFin.clear();
         mesAnoFin.sendKeys("12/2024");
         mesAnoFin.sendKeys(Keys.TAB);
 
-
-         // Clicar Emitir Relatório
+        // Clicar Emitir Relatório
         WebElement emtRel = wait.until(ExpectedConditions.elementToBeClickable(
                 By.xpath("/html/body/table/tbody/tr[2]/td[4]/table/tbody/tr/td/form/table[1]/tbody/tr/td[2]/table/tbody/tr/td/input[2]")));
-        emtRel.click();   
+        emtRel.click();
 
         System.out.println("Cliquei no submenu, URL atual: " + driver.getCurrentUrl());
 
@@ -170,7 +182,7 @@ void setup() {
         if (driver != null) {
             // driver.quit();
         }
-    }
+}
 
     @Override
     public WebDriver getWebDriver() {
