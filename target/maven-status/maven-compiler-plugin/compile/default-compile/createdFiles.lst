@@ -1,0 +1,7 @@
+br\com\sistelteste\LoginTest.class
+br\com\sistelteste\LoginHelper.class
+br\com\sistelteste\WebDriverProvider.class
+br\com\sistelteste\RelacaoBeneficosReajustadosTest.class
+br\com\sistelteste\Login.class
+br\com\sistelteste\ScreenshotOnFailureExtension.class
+br\com\sistelteste\App.class
